@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Wilayah Kota Mataram</title>
+    <link rel="stylesheet" href="assets/leaflet.css">
+    <script src="assets/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <style>
+        body, html { padding: 0; margin: 0; height: 100%; }
+        #map { height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script>
+        const map = L.map('map').setView([-8.583069, 116.109819], 12); // Koordinat Kota Mataram
+
+        // Tambahkan Tile Layer
+        const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        });
+        osmLayer.addTo(map);
+
+        // Definisi layer group untuk setiap kecamatan
+        const kecamatanLayers = {
+            "Ampenan": new L.LayerGroup(),
+            "Cakranegara": new L.LayerGroup(),
+            "Mataram": new L.LayerGroup(),
+            "Sekarbela": new L.LayerGroup(),
+            "Selaprang": new L.LayerGroup(),
+            "Sandubaya": new L.LayerGroup()
+        };
+
+        // Fungsi untuk menambahkan GeoJSON ke layer group
+        function loadGeoJsonToLayer(fileName, layerGroup, color) {
+            fetch(fileName)
+                .then(response => response.json())
+                .then(data => {
+                    L.geoJSON(data, {
+                        style: {
+                            color: color,
+                            weight: 2,
+                            fillOpacity: 0.3
+                        }
+                    }).addTo(layerGroup);
+                });
+        }
+
+        // Memuat GeoJSON untuk masing-masing kecamatan dengan warna yang berbeda
+        loadGeoJsonToLayer('ampenan.geojson', kecamatanLayers["Ampenan"], '#ff6666');
+        loadGeoJsonToLayer('cakranegara.geojson', kecamatanLayers["Cakranegara"], '#66ff66');
+        loadGeoJsonToLayer('mataram.geojson', kecamatanLayers["Mataram"], '#6666ff');
+        loadGeoJsonToLayer('sekarbela.geojson', kecamatanLayers["Sekarbela"], '#ffcc66');
+        loadGeoJsonToLayer('selaprang.geojson', kecamatanLayers["Selaprang"], '#ff66ff');
+        loadGeoJsonToLayer('sandubaya.geojson', kecamatanLayers["Sandubaya"], '#66ccff');
+
+        // Menambahkan setiap layer group ke peta
+        for (let layer in kecamatanLayers) {
+            kecamatanLayers[layer].addTo(map);
+        }
+
+        // Kontrol Layer untuk peta jalan dan peta satelit
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri'
+        });
+
+        const baseMaps = {
+            "Peta Jalan": osmLayer,
+            "Peta Satelit": satelliteLayer
+        };
+
+        // Menambahkan kontrol layer untuk overlay (kecamatan)
+        const overlayMaps = {
+            "Ampenan": kecamatanLayers["Ampenan"],
+            "Cakranegara": kecamatanLayers["Cakranegara"],
+            "Mataram": kecamatanLayers["Mataram"],
+            "Sekarbela": kecamatanLayers["Sekarbela"],
+            "Selaprang": kecamatanLayers["Selaprang"],
+            "Sandubaya": kecamatanLayers["Sandubaya"]
+        };
+
+        // Menambahkan kontrol layer ke peta
+        L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+        // Definisi cluster untuk setiap kategori
+        const clusterCamat = L.markerClusterGroup();
+        const clusterKesehatan = L.markerClusterGroup();
+        const clusterPendidikan = L.markerClusterGroup();
+        const clusterKeamanan = L.markerClusterGroup();
+        const clusterWisata = L.markerClusterGroup();
+
+        // Fungsi untuk menambah marker ke cluster
+        function addMarkerToCluster(cluster, lat, lng, popupText, iconUrl) {
+            const customIcon = L.icon({
+                iconUrl: iconUrl,
+                iconSize: [30, 40],
+                iconAnchor: [15, 40],
+                popupAnchor: [0, -35]
+            });
+            const marker = L.marker([lat, lng], { icon: customIcon });
+            marker.bindPopup(popupText);
+            cluster.addLayer(marker);
+        }
+
+        // cluster kantor camat
+        addMarkerToCluster(clusterCamat, -8.594184, 116.112428, "Kantor Camat mataram", "assets/images/camat.png");
+        addMarkerToCluster(clusterCamat, -8.611314, 116.076123, "Kantor Camat sekarbela", "assets/images/camat.png");
+        addMarkerToCluster(clusterCamat, -8.579495, 116.082691, "Kantor Camat ampenan", "assets/images/camat.png");
+        addMarkerToCluster(clusterCamat, -8.563903, 116.117865, "Kantor Camat selaparang", "assets/images/camat.png");
+        addMarkerToCluster(clusterCamat, -8.566444, 116.135734, "Kantor Camat cakranegara", "assets/images/camat.png");
+        addMarkerToCluster(clusterCamat, -8.593031, 116.151802, "Kantor Camat sandubaya", "assets/images/camat.png");
+
+        //cluster kesehatan
+        addMarkerToCluster(clusterKesehatan, -8.605165, 116.113429, "Rumah sakit Biomedika", "assets/images/kesehatan.png");
+        addMarkerToCluster(clusterKesehatan, -8.599861, 116.114105, "RSUD kota mataram", "assets/images/kesehatan.png");
+        addMarkerToCluster(clusterKesehatan, -8.607992, 116.128921, "RSUD provinsi", "assets/images/kesehatan.png");
+        addMarkerToCluster(clusterKesehatan, -8.587626, 116.114426, "Rumah sakit islam Siti Hajar", "assets/images/kesehatan.png");
+        addMarkerToCluster(clusterKesehatan, -8.587174, 116.122802, "RS risa santa medica", "assets/images/kesehatan.png");
+        addMarkerToCluster(clusterKesehatan, -8.590155, 116.093413, "RS universitas mataram", "assets/images/kesehatan.png");
+        addMarkerToCluster(clusterKesehatan, -8.577265, 116.084574, "RS Bhayangkara", "assets/images/kesehatan.png");
+
+        //cluster pendidikan
+        addMarkerToCluster(clusterPendidikan, -8.587029, 116.093164, "universitas mataram", "assets/images/pendidikan.png");
+        addMarkerToCluster(clusterPendidikan, -8.584182, 116.087728, "perpustakaan NTB", "assets/images/pendidikan.png");
+        addMarkerToCluster(clusterPendidikan, -8.582922, 116.08907, "universitas mandalika", "assets/images/pendidikan.png");
+        addMarkerToCluster(clusterPendidikan, -8.61017, 116.100212, "UIN mataram", "assets/images/pendidikan.png");
+
+        //cluster keamanan
+        addMarkerToCluster(clusterKeamanan, -8.578624, 116.086315, "Polda NTB", "assets/images/keamanan.png");
+        addMarkerToCluster(clusterKeamanan, -8.577548, 116.083282, "polresta mataram", "assets/images/keamanan.png");
+        addMarkerToCluster(clusterKeamanan, -8.616689, 116.077059, "kepolisian sub sektor sekarbela", "assets/images/keamanan.png");
+        addMarkerToCluster(clusterKeamanan, -8.585579, 116.077675, "polisi sektor ampenan", "assets/images/keamanan.png");
+        //cluster wisata
+        addMarkerToCluster(clusterWisata, -8.617852, 116.074412, "pantai gading", "assets/images/wisata.png");
+        addMarkerToCluster(clusterWisata, -8.607183, 116.074597, "pantai cantik", "assets/images/wisata.png");
+        addMarkerToCluster(clusterWisata, -8.602725, 116.073829, "pantai loang baloq", "assets/images/wisata.png");
+        addMarkerToCluster(clusterWisata, -8.600932, 116.073303, "pantai tanjung karang", "assets/images/wisata.png");
+        addMarkerToCluster(clusterWisata, -8.596784, 116.073635, "pantai selingkuh", "assets/images/wisata.png");
+        addMarkerToCluster(clusterWisata, -8.589913, 116.072796, "pantai viral", "assets/images/wisata.png");
+        addMarkerToCluster(clusterWisata, -8.570372, 116.071828, "pantai ampenan", "assets/images/wisata.png");
+
+
+        // Menambahkan cluster ke peta
+        map.addLayer(clusterCamat);
+        map.addLayer(clusterKesehatan);
+        map.addLayer(clusterPendidikan);
+        map.addLayer(clusterKeamanan);
+        map.addLayer(clusterWisata);
+
+        // Kontrol Layer untuk menampilkan/hide kategori cluster
+        const overlayClusterMaps = {
+            "Kantor Camat": clusterCamat,
+            "Kesehatan": clusterKesehatan,
+            "Pendidikan": clusterPendidikan,
+            "Keamanan": clusterKeamanan,
+            "Wisata": clusterWisata
+        };
+
+        // Menambahkan kontrol layer untuk cluster ke peta
+        L.control.layers(null, overlayClusterMaps).addTo(map);
+
+        // Menambahkan marker saat peta diklik
+        map.on('click', function(e) {
+            const customIcon = L.icon({
+                iconUrl: 'assets/images/marker.png', // Ganti dengan path ikon kustom Anda
+                iconSize: [30, 40],
+                iconAnchor: [15, 40],
+                popupAnchor: [0, -35]
+            });
+            const marker = L.marker(e.latlng, { icon: customIcon }).addTo(map);
+            marker.bindPopup("Koordinat: " + e.latlng.toString()).openPopup();
+        });
+
+    //      // Grouped Custom Controls
+    // const groupedControl = L.Control.extend({
+    //     onAdd: function (map) {
+    //         const container = L.DomUtil.create('div', 'leaflet-control-custom-group');
+
+    //         // Full Screen Control
+    //         const fullScreenBtn = L.DomUtil.create('div', 'leaflet-control-custom', container);
+    //         fullScreenBtn.innerHTML = `<i class="fas fa-expand"></i>`;
+    //         L.DomEvent.on(fullScreenBtn, 'click', function () {
+    //             if (!document.fullscreenElement) {
+    //                 map._container.requestFullscreen();
+    //             } else {
+    //                 document.exitFullscreen();
+    //             }
+    //         });
+
+    //         // Add Marker Control (Click on map instead of button)
+    //         const addMarkerBtn = L.DomUtil.create('div', 'leaflet-control-custom', container);
+    //         addMarkerBtn.innerHTML = `<i class="fas fa-map-marker-alt"></i>`;
+    //         L.DomEvent.on(addMarkerBtn, 'click', function () {
+    //             alert('Click on the map to add a marker at that position.');
+    //         });
+
+    //         // Import File Control (Dummy Example)
+    //         const importFileBtn = L.DomUtil.create('div', 'leaflet-control-custom', container);
+    //         importFileBtn.innerHTML = `<i class="fas fa-file-import"></i>`;
+    //         L.DomEvent.on(importFileBtn, 'click', function () {
+    //             alert('Importing file...');
+    //         });
+
+    //         // Draw Polygon Control
+    //         const drawPolygonBtn = L.DomUtil.create('div', 'leaflet-control-custom', container);
+    //         drawPolygonBtn.innerHTML = `<i class="fas fa-draw-polygon"></i>`;
+    //         L.DomEvent.on(drawPolygonBtn, 'click', function () {
+    //             const polygon = L.polygon([
+    //                 [51.509, -0.08],
+    //                 [51.503, -0.06],
+    //                 [51.51, -0.047]
+    //             ]).addTo(map).bindPopup('A polygon.');
+    //         });
+
+    //         // Remove Layer Control
+    //         const removeLayerBtn = L.DomUtil.create('div', 'leaflet-control-custom', container);
+    //         removeLayerBtn.innerHTML = `<i class="fas fa-trash"></i>`;
+    //         L.DomEvent.on(removeLayerBtn, 'click', function () {
+    //             map.eachLayer((layer) => {
+    //                 if (layer instanceof L.Marker || layer instanceof L.Polygon) {
+    //                     map.removeLayer(layer);
+    //                 }
+    //             });
+    //             alert('All markers and polygons removed.');
+    //         });
+
+    //         return container;
+    //     }
+    // }); 
+    </script>
+</body>
+</html>
